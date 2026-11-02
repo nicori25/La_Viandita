@@ -1,17 +1,19 @@
-/**
- * Componente Alert: muestra mensajes de carga, confirmación y error.
- * Requisito del paso 16.
- */
-export default {
-  name: 'Alert',
-  props: {
-    tipo: { type: String, default: 'info' }, // 'success' | 'error' | 'info' | 'warning'
-    mensaje: { type: String, required: true },
-    visible: { type: Boolean, default: true },
-  },
-  template: `
-    <div v-if="visible" :class="['alert', `alert-${tipo}`]" role="alert">
-      {{ mensaje }}
-    </div>
-  `,
-}
+<template>
+  <div v-if="visible" :class="['alert', `alert-${tipo}`]" role="alert">
+    {{ mensaje }}
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
+const props = defineProps({
+  tipo: { type: String, default: 'info' },
+  mensaje: { type: String, required: true },
+  visible: { type: Boolean, default: true },
+})
+
+const authStore = useAuthStore()
+const modoPrueba = computed(() => authStore.estaEnModoPrueba)
+</script>

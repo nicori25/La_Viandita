@@ -156,7 +156,7 @@
     <ConfirmDialog
       :abierto="dialogoEliminarAbierto"
       titulo="¿Eliminar opción de menú?"
-      :mensaje="`¿Estás seguro de eliminar la opción de menú para ${menuSeleccionado?.semana}?`"
+      :mensaje="mensajeConfirmarEliminar"
       textoBoton="Confirmar eliminación"
       @confirmar="ejecutarEliminar"
       @cancelar="dialogoEliminarAbierto = false"
@@ -202,6 +202,11 @@ const errores = ref({})
 
 const dialogoEliminarAbierto = ref(false)
 const menuSeleccionado = ref(null)
+const mensajeConfirmarEliminar = computed(() =>
+  menuSeleccionado.value
+    ? `¿Estás seguro de eliminar la opción de menú para ${menuSeleccionado.value.semana}?`
+    : ''
+)
 const alerta = ref(null)
 
 function mostrarAlerta(tipo, mensaje) {

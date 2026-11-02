@@ -153,7 +153,7 @@
     <ConfirmDialog
       :abierto="dialogoBajaAbierto"
       :titulo="`${suscripcionSeleccionada?.estado === 'activa' ? 'Dar de baja' : 'Reactivar'} suscripción`"
-      :mensaje="`¿Estás seguro de ${suscripcionSeleccionada?.estado === 'activa' ? 'dar de baja' : 'reactivar'} esta suscripción? Se conservará el historial de pagos.`"
+      :mensaje="mensajeConfirmarBaja"
       textoBoton="Confirmar"
       @confirmar="ejecutarBaja"
       @cancelar="dialogoBajaAbierto = false"
@@ -202,6 +202,11 @@ const errores = ref({})
 
 const dialogoBajaAbierto = ref(false)
 const suscripcionSeleccionada = ref(null)
+const mensajeConfirmarBaja = computed(() =>
+  suscripcionSeleccionada.value
+    ? `¿Estás seguro de ${suscripcionSeleccionada.value.estado === 'activa' ? 'dar de baja' : 'reactivar'} esta suscripción? Se conservará el historial de pagos.`
+    : ''
+)
 const alerta = ref(null)
 
 function mostrarAlerta(tipo, mensaje) {

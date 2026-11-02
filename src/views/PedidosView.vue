@@ -145,7 +145,7 @@
     <ConfirmDialog
       :abierto="dialogoCancelarAbierto"
       titulo="¿Cancelar pedido?"
-      :mensaje="`¿Estás seguro de cancelar el pedido de {{ pedidoSeleccionado?.cantidad }} vianda(s) para el curso {{ pedidoSeleccionado?.curso }}°?`"
+      :mensaje="mensajeConfirmarCancelar"
       textoBoton="Confirmar cancelación"
       @confirmar="ejecutarCancelar"
       @cancelar="dialogoCancelarAbierto = false"
@@ -194,6 +194,11 @@ const errores = ref({})
 
 const dialogoCancelarAbierto = ref(false)
 const pedidoSeleccionado = ref(null)
+const mensajeConfirmarCancelar = computed(() =>
+  pedidoSeleccionado.value
+    ? `¿Estás seguro de cancelar el pedido de ${pedidoSeleccionado.value.cantidad} vianda(s) para el curso ${pedidoSeleccionado.value.curso}°?`
+    : ''
+)
 const alerta = ref(null)
 
 function mostrarAlerta(tipo, mensaje) {

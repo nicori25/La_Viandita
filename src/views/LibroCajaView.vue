@@ -145,7 +145,7 @@
     <ConfirmDialog
       :abierto="dialogoEliminarAbierto"
       titulo="¿Eliminar movimiento de caja?"
-      :mensaje="`¿Estás seguro de eliminar el movimiento "${movimientoSeleccionado?.concepto}"?`"
+      :mensaje="mensajeConfirmarEliminar"
       textoBoton="Confirmar eliminación"
       @confirmar="ejecutarEliminar"
       @cancelar="dialogoEliminarAbierto = false"
@@ -176,6 +176,12 @@ const usuariosLista = ref([])
 
 const filtroBusqueda = ref('')
 const filtroTipo = ref('todos')
+
+const mensajeConfirmarEliminar = computed(() =>
+  movimientoSeleccionado.value
+    ? `¿Estás seguro de eliminar el movimiento "${movimientoSeleccionado.value.concepto}"?`
+    : ''
+)
 
 const mostrarFormulario = ref(false)
 const editando = ref(false)

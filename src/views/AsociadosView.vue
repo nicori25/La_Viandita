@@ -160,7 +160,7 @@
     <ConfirmDialog
       :abierto="dialogoBajaAbierto"
       :titulo="`${asociadoSeleccionado?.activo ? 'Dar de baja' : 'Reactivar'} asociado`"
-      :mensaje="`¿Estás seguro de ${asociadoSeleccionado?.activo ? 'dar de baja' : 'reactivar'} a {{ asociadoSeleccionado?.nombre }} {{ asociadoSeleccionado?.apellido }}? Se conservará el historial.`"
+      :mensaje="mensajeConfirmarBaja"
       textoBoton="Confirmar"
       @confirmar="ejecutarBaja"
       @cancelar="dialogoBajaAbierto = false"
@@ -214,6 +214,11 @@ const errores = ref({})
 // Diálogo de baja
 const dialogoBajaAbierto = ref(false)
 const asociadoSeleccionado = ref(null)
+const mensajeConfirmarBaja = computed(() =>
+  asociadoSeleccionado.value
+    ? `¿Estás seguro de ${asociadoSeleccionado.value.activo ? 'dar de baja' : 'reactivar'} a ${asociadoSeleccionado.value.nombre} ${asociadoSeleccionado.value.apellido}? Se conservará el historial.`
+    : ''
+)
 
 // Alerta temporal
 const alerta = ref(null)
