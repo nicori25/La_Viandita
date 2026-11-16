@@ -1,234 +1,98 @@
-# La Viandita - Sistema de Gestión de Precooperativa Escolar
+# La Viandita
 
-Trabajo integrador de la escuela técnica. Precooperativa formada por estudiantes (Sebastián Lopez y Ariel Aranda, curso 7°3) que ofrece viandas accesibles a los alumnos durante la jornada escolar.
+Aplicación de gestión para una precooperativa escolar de viandas. Vue 3, Vite, Pinia y Supabase opcional.
 
-## 📋 ¿Qué es este proyecto?
+## Iniciar
 
-Es una aplicación web para gestionar la precooperativa escolar "La Viandita". Permite llevar el registro de asociados, suscripciones, pedidos, menú semanal, libro de caja, entregas, tareas y actas, con un tablero de indicadores (KPI) para el seguimiento del desempeño.
+Node.js 22 o 24 y npm. Desde el checkout:
 
-## 🚀 Cómo correr el proyecto
-
-### Requisitos previos
-- Node.js 18 o superior
-- npm (viene con Node.js)
-
-### 1. Instalar dependencias
 ```bash
-cd C:\Users\ariar\Desktop\La_Viandita
-npm install
+npm ci
+npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
 ```
 
-### 2. Configurar variables de entorno (opcional, para Supabase)
-El proyecto funciona en **modo datos de prueba** sin necesidad de configurar nada. Si querés conectar una base de datos real en Supabase:
+En el entorno en la nube, si la caché predeterminada no es escribible:
 
-1. Copiá el archivo de ejemplo:
-   ```bash
-   copy .env.example .env
-   ```
-2. Edita `.env` y completá con tu URL y clave anónima de Supabase:
-   ```
-   VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-   VITE_SUPABASE_ANON_KEY=tu-clave-anon-publica
-   ```
-
-> ⚠️ Nunca subas el archivo `.env` al control de versiones. Está incluido en `.gitignore`.
-
-### 3. Ejecutar en modo desarrollo
 ```bash
-npm run dev
+npm ci --cache /workspace/.npm-cache
 ```
-La app se abre en: http://localhost:5173
 
-### 4. Build para producción
+Por defecto se conecta a **Supabase** en el proyecto `skctpovhhavsxoryhbjz`. La URL y la clave pública `publishable` están en `src/config/supabase.js`; se pueden sobrescribir con variables Vite. No hay claves administrativas en el cliente ni en el repositorio. Iniciar sesión requiere una cuenta de Auth con perfil activo en `usuarios`.
+
+Las tablas ya existen. Para habilitar el tablero y actualizar permisos, ejecutar `sql/upgrade_gestion.sql` desde SQL Editor. Ver [sql/README.md](sql/README.md) y el asistente `sql/vincular_administrador.sql` para crear el perfil de Administración. Esta operación requiere acceso al panel del proyecto: la clave pública no puede aplicar migraciones.
+
+Para recorrer una **demostración aislada con datos ficticios**:
+
 ```bash
+VITE_DATA_MODE=demo npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
+```
+
+En ese modo, elegir **Administración** permite recorrer todos los módulos. Los roles de prueba son una simulación, no autenticación segura. No usar datos reales en la demostración. Una falla de conexión a Supabase nunca activa la demostración automáticamente.
+
+## Funciones
+
+- Navegación adaptable a computadoras y celulares.
+- Asociados: alta, edición, búsqueda, baja lógica y reactivación.
+- Suscripciones: modalidad, importe, vigencia y control de superposición.
+- Menú: opciones, precios, características alimentarias y estado.
+- Pedidos: asociación con suscripción vigente, menú y cantidad; cancelación sin borrar el historial. Los pedidos entregados no se cancelan ni editan.
+- Entregas: retiro efectivo, puntualidad y observaciones; rechazo de duplicados.
+- Caja: ingresos, egresos, responsable y referencia de comprobante.
+- Tareas: comisión, plazo, cumplimiento y fecha de cierre.
+- Actas: reunión, contenido, aprobación y responsable del registro.
+- Tablero: cuatro KPI, tres gráficos, período, actualización y estados sin datos/error/carga.
+- Informe: período, fuentes, resultados, metas, gráficos, acciones y observaciones; imprimir o guardar como PDF desde el navegador.
+- Listados: búsqueda, filtros, paginación y exportación CSV.
+- Datos de demostración persistentes y descarga/restauración de respaldo JSON.
+
+Los cambios locales se guardan en `localStorage` (`viandita-data-v1`). La sesión de prueba se conserva en la pestaña mediante `sessionStorage`. El respaldo no sincroniza dispositivos ni migra automáticamente los datos a Supabase. Si se bloquea el almacenamiento o no alcanza el espacio, la operación informa el error y no aplica el cambio. Un respaldo corrupto no se reemplaza silenciosamente: se ofrece recuperación o restablecimiento desde Datos y respaldo.
+
+## Una tarea de principio a fin
+
+1. Ingresar como Administración y crear un asociado ficticio.
+2. Crear su suscripción con fechas e importe. Se rechazan fechas invertidas y superposiciones activas.
+3. Registrar el cobro confirmado en Caja con concepto y referencia de comprobante.
+4. Seleccionar un menú activo y crear el pedido en una fecha de vigencia de la suscripción.
+5. Registrar el retiro en Entregas. La ausencia de un estudiante se mantiene como pedido pendiente, no como entrega.
+6. Seleccionar ese período en Resumen o Informe, revisar los resultados e imprimir el seguimiento.
+
+Estos registros se completan explícitamente: una suscripción no cobra ni genera pedidos automáticamente. La referencia de comprobante es textual; no hay emisión fiscal ni procesamiento de pagos. Caja conserva los movimientos: una rectificación se documenta mediante un asiento compensatorio. El registro de estudiantes no acredita por sí solo membresía o derechos de voto en la precooperativa.
+
+## Indicadores
+
+- Margen: `(ingresos − egresos) / ingresos × 100`; meta ≥10%, revisar precio si supera el 20%.
+- Suscriptores: personas distintas con estado activo y vigencia al cierre. No acredita pago. Meta de referencia: 40 al final de semana 8; requiere acordar inicio y capacidad.
+- Puntualidad: entregas marcadas en franja / entregas registradas; meta ≥95%.
+- Tareas: cierres en fecha / tareas cuyo vencimiento está en el período; meta ≥85%.
+
+Sin denominador, se muestra **No calculable**, no cero. El filtro afecta las cuatro métricas y las tres visualizaciones. Las consultas se realizan al abrir la vista o aplicar un período. Una edición de fechas invalida el resultado anterior hasta aplicar el filtro. Los datos iniciales son de marzo de 2026 y el período inicial de la demo refleja ese mes. Hay 9 suscripciones con estado activo, pero solo 4 vigentes al cierre del 31/03. Las observaciones iniciales de entrega incluyen una ausencia: ese registro es histórico ficticio y debe depurarse antes de evaluar un servicio real.
+
+## Roles
+
+Administración escribe en todos los módulos; Tesorero en suscripciones y caja; Distribución en pedidos y entregas; Secretario en asociados, tareas y actas. Los roles internos y de supervisión pueden consultar la gestión y el seguimiento. Asociado consulta solo indicadores agregados, menú y proyecto. La ruta y el servicio local comprueban permisos; la protección real remota requiere RLS de Supabase.
+
+## Supabase configurado
+
+1. En el proyecto ya configurado, ejecutar solo `sql/upgrade_gestion.sql`: las tablas ya existen. Para otra base vacía, ejecutar primero `sql/schema.sql`.
+2. La configuración pública predeterminada está en `src/config/supabase.js`. Opcionalmente sobrescribirla con `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`; se mantiene compatibilidad con `VITE_SUPABASE_ANON_KEY`. Nunca usar `service_role` ni claves secretas en el cliente.
+3. Crear las cuentas en Supabase Auth. Desde SQL Editor, con acceso administrativo, insertar el perfil en `usuarios` usando el UUID de Auth, correo, nombre y rol autorizado. Los clientes no pueden crear ni cambiar perfiles/roles.
+4. Cargar catálogos y datos del servicio. `sql/datos_prueba.sql` se puede inspeccionar como ejemplo; no ejecutar semillas en una base de producción ni suponer que los UUID de Auth coinciden.
+5. Verificar con cuentas de cada rol: lectura y escritura permitida/denegada, recarga, segunda sesión, consulta agregada `resumen_periodo`, y respaldo/restauración administrados en Supabase.
+
+La migración es transaccional, excluye al rol Asociado de lecturas internas, fija `search_path` de funciones privilegiadas, evita autoasignación de roles y agrega consulta agregada autenticada y un índice de entrega única por pedido. Si hay entregas duplicadas existentes, la migración falla sin borrar datos: revisar los duplicados antes de volver a aplicarla.
+
+**Conectividad real verificada:** Auth devuelve HTTP 200 y las nueve tablas operativas responden HTTP 200 en consultas sin filas. La función `resumen_periodo` faltaba al verificar la base. **La migración y el acceso con una cuenta autenticada requieren completar los pasos de SQL Editor; no se afirma que ya se hayan validado.** El esquema de base conserva relaciones y controles básicos. El endurecimiento de reglas concurrentes (por ejemplo, superposición de suscripciones entre dos operadores), auditoría de cambios y políticas de respaldo operativas deben validarse en el servidor antes de uso productivo.
+
+## Validación
+
+```bash
+npm test
 npm run build
-```
-Los archivos se generan en la carpeta `dist/`.
-
-## 🔐 Roles simulados (primera versión)
-
-En esta primera versión la autenticación está **simulada**: al ingresar, seleccionás un rol y no se pide contraseña. Los roles disponibles son:
-
-| Rol | Qué puede hacer |
-|-----|-----------------|
-| Tesorero | Ver tablero, gestionar Libro de Caja y suscripciones |
-| Administración | Ver tablero, gestionar asociados, suscripciones y pedidos |
-| Distribución | Ver tablero, gestionar pedidos y entregas |
-| Secretario | Ver tablero, gestionar tareas y actas |
-| Asociado | Ver tablero (solo lectura) |
-| Docente Asesor | Ver tablero, asociados y actas |
-| Director | Ver tablero, asociados y actas |
-
-Los permisos se reflejan en la interfaz (los menús y botones se muestran u ocultan según el rol).
-
-## 🗄️ Base de datos (Supabase) — Pasos 14 y 15
-
-### Cómo configurar Supabase
-
-1. **Crear un proyecto en Supabase**
-   - Ir a [https://supabase.com](https://supabase.com)
-   - Creá un nuevo proyecto (elige una contraseña para la base de datos, la necesitarás para el SQL Editor)
-   - Anotá la **URL del proyecto** y la **clave pública (anon key)** de la sección Settings > API
-
-2. **Configurar variables de entorno**
-   - Copiá el archivo de ejemplo:
-     ```bash
-     copy .env.example .env
-     ```
-   - Edita `.env` y completá con tus valores:
-     ```
-     VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-     VITE_SUPABASE_ANON_KEY=tu-clave-anon-publica
-     ```
-
-   > ⚠️ Nunca subas el archivo `.env` al control de versiones. Está incluido en `.gitignore`. Solo la clave anónima va en el cliente.
-
-3. **Ejecutar el script SQL**
-   - Entrá al **SQL Editor** de tu proyecto Supabase
-   - Copiá y pegá todo el contenido de `sql/schema.sql`
-   - Ejecutá el script. Esto creará todas las tablas, claves foráneas, índices y **políticas RLS** (seguridad a nivel de fila).
-
-4. **Crear usuarios en Supabase Auth**
-   - En Authentication > Users, podés crear usuarios con email y contraseña
-   - O bien, desde la app, usá la opción "Crear cuenta" en el login (si habilitás el registro)
-   - Después, desde el SQL Editor, insertá un registro en la tabla `usuarios` vinculando cada usuario de Auth con su rol:
-     ```sql
-     INSERT INTO usuarios (auth_user_id, email, nombre, rol, activo)
-     VALUES ('<auth_user_id>', 'sebastian@escuela.edu.ar', 'Sebastián López', 'tesorero', true);
-     ```
-
-### Script SQL (`sql/schema.sql`)
-Contiene todas las tablas, claves foráneas, índices y relaciones necesarias para reproducir la base de datos en Supabase (PostgreSQL).
-
-Tablas incluidas:
-- `usuarios` - Usuarios del sistema con rol (vinculados a auth.users)
-- `asociados` - Estudiantes asociados (datos personales confidenciales)
-- `cargos` - Cargos del Consejo de Administración
-- `comisiones` - Comisiones de trabajo
-- `tipos_vianda` - Catálogo de viandas
-- `menu_semanal` - Menú semanal con restricciones alimentarias y precio
-- `suscripciones` - Suscripciones semanales/mensuales (baja lógica)
-- `pedidos` - Pedidos de viandas
-- `libro_caja` - Ingresos y egresos
-- `entregas` - Registro de entregas con control de franja horaria
-- `tareas` - Tareas asignadas a comisiones
-- `actas` - Actas de asamblea y consejo
-
-### Políticas RLS (Row Level Security)
-El script SQL incluye políticas de seguridad que restringen el acceso a los datos según el rol del usuario:
-
-| Tabla | Quién puede leer | Quién puede escribir |
-|-------|-----------------|---------------------|
-| usuarios | Todos autenticados (propio + interno) | Solo propio |
-| asociados | Roles internos | Administración, Secretario |
-| suscripciones | Roles internos | Administración, Tesorero |
-| pedidos | Roles internos | Administración, Distribución, Secretario |
-| libro_caja | Roles internos | Tesorero, Administración |
-| entregas | Roles internos | Distribución |
-| tareas | Roles internos | Secretario |
-| actas | Roles internos | Secretario |
-| catálogos (cargos, comisiones, tipos_vianda, menu_semanal) | Todos autenticados | Roles internos |
-
-Los alumnos suscriptos (rol `asociado`) solo pueden leer el tablero, no ver datos personales de otros asociados.
-
-### Modo prueba (sin Supabase)
-Si no completás el `.env`, la app funciona en **modo datos de prueba** con datos ficticios. Los cambios no se guardan permanentemente. Esto permite probar todas las pantallas sin configurar Supabase.
-
-## 📊 KPI del tablero
-
-El tablero muestra 4 indicadores con color y etiqueta:
-
-| KPI | Fórmula | Meta | Colores |
-|-----|---------|------|---------|
-| Margen mensual | (ingresos − egresos) ÷ ingresos × 100 | ≥ 10% | Verde: en meta / Amarillo: >20% revisar precio / Rojo: crítico |
-| Suscriptos activos | Cantidad de suscripciones vigentes | 40 (semana 8) | Verde ≥100% / Amarillo 90-99% / Rojo <90% |
-| Entregas en horario | entregas en franja ÷ totales × 100 | ≥ 95% | Verde ≥100% / Amarillo 90-99% / Rojo <90% |
-| Cumplimiento de tareas | cumplidas en plazo ÷ asignadas × 100 | ≥ 85% | Verde ≥100% / Amarillo 90-99% / Rojo <90% |
-
-- **Verde** = "En meta" (≥100% de la meta)
-- **Amarillo** = "En alerta" (90% a <100%)
-- **Rojo** = "Crítico" (<90% o no calculable)
-
-El tablero muestra **solo totales, sin datos personales** de asociados.
-
-## 🗃️ Estructura del proyecto
-
-```
-la-viandita/
-├── src/
-│   ├── views/          # Páginas principales (10 vistas)
-│   ├── components/     # Componentes reutilizables (tarjetas KPI, alertas, diálogos, etc.)
-│   ├── router/         # Rutas y protección por rol
-│   ├── stores/         # Estado global (autenticación simulada)
-│   ├── services/       # Servicio de conexión con Supabase
-│   ├── data/           # Datos ficticios para pruebas
-│   ├── utils/          # Utilidades (KPIs, validaciones, roles)
-│   ├── assets/css/     # Estilos (Tailwind CSS)
-│   ├── App.vue
-│   └── main.js
-├── sql/
-│   └── schema.sql      # Script de base de datos para Supabase
-├── .env.example        # Ejemplo de variables de entorno (no subir a git)
-├── .gitignore          # Archivos ignorados por git
-├── index.html
-├── package.json
-├── vite.config.js
-└── README.md
+npm run test:e2e
 ```
 
-## 📝 Pasos de la consigna "Diseño del sistema"
+Los tests unitarios verifican metas, denominadores, períodos y conteo de personas. Playwright prueba navegación, gestión, persistencia, circuito completo, duplicados, permisos, móvil, respaldo y PDF. Usa Chromium en `/usr/bin/chromium`; cambiar `CHROMIUM_PATH` si está en otra ubicación. No necesita descargar navegadores en el entorno preparado. El servidor de pruebas usa el puerto 5174 y fuerza `VITE_DATA_MODE=demo`, separado de la conexión real de 5173. No deben ejecutarse pruebas de escritura contra datos reales. Cada prueba usa un contexto de navegador aislado.
 
-| Paso | Estado | Descripción |
-|------|--------|-------------|
-| 1 | ✅ | Revisar pantallas e historias (partimos de cero, carpeta vacía) |
-| 2 | ✅ | Proyecto Vue.js creado con Vite, carpetas organizadas |
-| 3 | ✅ | 10 vistas principales implementadas |
-| 4 | ✅ | Navegación con Vue Router, roles simulados |
-| 5 | ✅ | Formularios con validación de campos obligatorios, formatos y valores permitidos |
-| 6 | ✅ | Listados con datos ficticios, identificados como "datos de prueba" |
-| 7 | ✅ | Interfaz responsiva con Tailwind CSS (computadora y celular) |
-| 8 | ✅ | ABMC implementado; bajas lógicas (no se borran registros, se desactivan) |
-| 9 | ✅ | Búsquedas y filtros en cada listado |
-| 10 | ✅ | Se conserva historial al dar de baja; datos compartidos vía Supabase |
-| 11 | ✅ | Se justifica el uso de Supabase como backend (ver abajo) |
-| 12 | ✅ | Modelo de tablas diseñado en `sql/schema.sql` |
-| 13 | ✅ | Script SQL creado en `sql/schema.sql` |
-| 14 | ✅ | Servicios de Supabase creados; app conecta si hay .env, si no usa mock data |
-| 15 | ✅ | Store de auth con Supabase Auth; SQL con políticas RLS por rol |
-| 16 | ✅ | Mensajes de carga, confirmación y error implementados |
+## Límites del proyecto
 
-## 🎯 Justificación del backend (Paso 11)
-
-**Se usa Supabase como backend** porque:
-
-- Permite que los datos se conserven y se compartan entre usuarios y dispositivos (no quedan atrapados en una sola computadora).
-- Ofrece autenticación real (Supabase Auth) y políticas de acceso a nivel de fila (RLS), lo cual permite aplicar permisos sobre los datos, no solo en la interfaz.
-- Se puede reproducir la base de datos con el script SQL (`sql/schema.sql`).
-- Cumple con los pasos 14, 15 y 16 de la consigna.
-
-**Limitación de no usar backend (alternativa desestimada):** si solo usáramos `localStorage`, los datos quedarían solo en ese navegador y esa computadora, no se compartirían entre usuarios, no habría autenticación real ni RLS, y no se cumplirían varios pasos de la consigna.
-
-## ⚠️ Seguridad y confidencialidad
-
-- Los datos personales de asociados (nombre, apellido, curso, división, teléfono) son confidenciales. Solo roles internos pueden verlos.
-- Los alumnos suscriptos son clientes y NO acceden a los datos internos.
-- **Nunca se incluyen contraseñas ni claves secretas en el cliente ni en la documentación.** La clave anónima de Supabase es pública y va en `.env`; la clave secreta (`service_role`) se usa solo en el servidor, nunca en el frontend.
-- El tablero muestra solo totales, nunca datos personales.
-
-## 🛠️ Tecnologías usadas
-
-- Vue 3 (Composition API)
-- Vite (build tool)
-- Vue Router (navegación)
-- Pinia (estado global)
-- Tailwind CSS (estilos, responsivo)
-- Supabase (base de datos y auth - pendiente de configurar)
-- Lucide Vue (iconos)
-
-## ✍️ Idioma
-
-Todos los textos de la interfaz y la documentación están en español rioplatense neutro.
-
----
-
-Desarrollado por Sebastián Lopez y Ariel Aranda, 7°3 - Escuela Técnica
+El sistema gestiona registros; no certifica seguridad alimentaria, autorización de actividades, aprobación de actas o firma de documentos. Encuestas, piloto alimentario, control de stock, trazabilidad sanitaria, comprobantes fiscales y ahorro real deben desarrollarse o verificarse con la escuela. Los gráficos usan texto, escalas desde cero y colores consistentes. El informe de seguimiento del sistema es distinto del informe final documental del proyecto.

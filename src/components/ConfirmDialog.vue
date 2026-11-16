@@ -1,30 +1,47 @@
-<template>
-  <div v-if="abierto" class="fixed inset-0 z-50 flex items-center justify-center">
-    <div class="absolute inset-0 bg-black opacity-50" @click="$emit('cancelar')"></div>
-    <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-      <h3 class="text-lg font-bold mb-2">{{ titulo }}</h3>
-      <p class="text-gray-700 mb-6">{{ mensaje }}</p>
-      <div class="flex justify-end gap-3">
-        <button @click="$emit('cancelar')" class="btn-secondary">Cancelar</button>
-        <button @click="$emit('confirmar')" class="btn-danger">{{ textoBoton }}</button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
-import { computed } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-
+import { ref, watch, nextTick, onBeforeUnmount } from "vue";
 const props = defineProps({
-  abierto: { type: Boolean, default: false },
-  titulo: { type: String, default: '¿Confirmar acción?' },
-  mensaje: { type: String, default: 'Esta acción no se puede deshacer.' },
-  textoBoton: { type: String, default: 'Confirmar' },
-})
-
-const emit = defineEmits(['confirmar', 'cancelar'])
-
-const authStore = useAuthStore()
-const modoPrueba = computed(() => authStore.estaEnModoPrueba)
+  abierto: Boolean,
+  titulo: { type: String, default: "Confirmar acción" },
+  mensaje: String,
+  textoBoton: { type: String, default: "Confirmar" },
+  ocupado: Boolean,
+});
+const emit = defineEmits(["confirmar", "cancelar"]);
+const dialog = ref(null);
+watch(
+  () => props.abierto,
+  async (value) => {
+    await nextTick();
+    if (value) dialog.value?.showModal();
+    else dialog.value?.close();
+  },
+);
+onBeforeUnmount(() => dialog.value?.close());
 </script>
+<template>
+  <dialog
+    ref="dialog"
+    class="dialog-card"
+    aria-labelledby="confirm-title"
+    @cancel.prevent="!ocupado && emit('cancelar')"
+  >
+    <h2 id="confirm-title">{{ titulo }}</h2>
+    <p class="muted mt-3">{{ mensaje }}</p>
+    <div class="dialog-actions">
+      <button
+        class="btn-secondary"
+        :disabled="ocupado"
+        @click="emit('cancelar')"
+      >
+        Cancelar</button
+      ><button
+        class="btn-primary"
+        :disabled="ocupado"
+        @click="emit('confirmar')"
+      >
+        {{ ocupado ? "Guardando…" : textoBoton }}
+      </button>
+    </div>
+  </dialog>
+</template>

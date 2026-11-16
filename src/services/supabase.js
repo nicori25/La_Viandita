@@ -1,16 +1,25 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
+import {
+  SUPABASE_PROJECT_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+} from "@/config/supabase";
 
-// Lee las variables de entorno (VITE_* están expuestas al cliente en Vite)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const demo = import.meta.env.VITE_DATA_MODE === "demo";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || SUPABASE_PROJECT_URL;
+const supabaseKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  SUPABASE_PUBLISHABLE_KEY;
 
-// Si no hay variables configuradas, devuelve null (modo datos de prueba)
-let supabase = null
-
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey)
-}
-
-export { supabase }
-
-export const supabaseConfigurado = () => supabase !== null
+// La demostración es explícita: una falla de red nunca reemplaza los datos reales
+// por ejemplos locales ni cambia la autenticación a roles simulados.
+export const supabase = demo
+  ? null
+  : createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    });
+export const supabaseConfigurado = () => supabase !== null;

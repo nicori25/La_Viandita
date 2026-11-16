@@ -1,212 +1,145 @@
-<template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-    <div class="bg-white rounded-lg shadow-xl p-8 md:p-12 w-full max-w-md">
-      <div class="text-center mb-8">
-        <span class="text-4xl">🥪</span>
-        <h1 class="text-2xl font-bold text-gray-800 mt-2">La Viandita</h1>
-        <p class="text-sm text-gray-500">Precooperativa escolar - Ingreso</p>
-      </div>
-
-      <!-- Advertencia de modo prueba -->
-      <div v-if="modoPrueba" class="datos-prueba mb-6">
-        ⚠️ Modo datos de prueba. Seleccioná tu rol para continuar.
-      </div>
-      <div v-if="usandoSupabase && !usuarioAutenticado" class="alert alert-info mb-6">
-        Iniciá sesión con tu cuenta de Supabase.
-      </div>
-
-      <!-- Formulario de Supabase (email + contraseña) -->
-      <div v-if="usandoSupabase && !usuarioAutenticado" class="space-y-4">
-        <div>
-          <label class="label">Correo electrónico</label>
-          <input v-model="email" type="email" class="input" placeholder="tu@escuela.edu.ar" />
-        </div>
-        <div class="relative">
-          <label class="label">Contraseña</label>
-          <input
-            v-model="password"
-            :type="showPassword ? 'text' : 'password'"
-            class="input pr-10"
-            placeholder="••••••••"
-          />
-          <button
-            type="button"
-            @click="showPassword = !showPassword"
-            class="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
-            title="Mostrar u ocultar contraseña"
-          >
-            {{ showPassword ? '🙈' : '👁️' }}
-          </button>
-        </div>
-        <button @click="iniciarSesionSupabase" class="btn-primary w-full py-3">
-          Iniciar sesión
-        </button>
-        <p class="text-center text-xs text-gray-500 mt-3">
-          ¿No tenés cuenta?
-          <button @click="mostrarRegistro = !mostrarRegistro" class="text-blue-600 hover:underline">
-            Crear una
-          </button>
-        </p>
-      </div>
-
-      <!-- Formulario de registro -->
-      <div v-if="mostrarRegistro && usandoSupabase && !usuarioAutenticado" class="mt-6 p-4 border border-gray-200 rounded bg-gray-50 space-y-3">
-        <h4 class="text-sm font-bold text-gray-700">Crear cuenta</h4>
-        <div>
-          <label class="label">Nombre completo</label>
-          <input v-model="regNombre" type="text" class="input" placeholder="Juan Pérez" />
-        </div>
-        <div>
-          <label class="label">Correo electrónico</label>
-          <input v-model="regEmail" type="email" class="input" placeholder="juan@escuela.edu.ar" />
-        </div>
-        <div class="relative">
-          <label class="label">Contraseña</label>
-          <input
-            v-model="regPassword"
-            :type="showRegPassword ? 'text' : 'password'"
-            class="input pr-10"
-            placeholder="••••••••"
-          />
-          <button
-            type="button"
-            @click="showRegPassword = !showRegPassword"
-            class="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
-            title="Mostrar u ocultar contraseña"
-          >
-            {{ showRegPassword ? '🙈' : '👁️' }}
-          </button>
-        </div>
-        <div>
-          <label class="label">Rol</label>
-          <select v-model="regRol" class="input">
-            <option value="tesorero">Tesorero</option>
-            <option value="administracion">Administración</option>
-            <option value="distribucion">Distribución</option>
-            <option value="secretario">Secretario</option>
-            <option value="asociado">Asociado</option>
-            <option value="docente_asesor">Docente Asesor</option>
-            <option value="director">Director</option>
-          </select>
-        </div>
-        <div class="flex justify-end gap-3">
-          <button @click="mostrarRegistro = false" class="btn-secondary text-sm">Cancelar</button>
-          <button @click="registrarseSupabase" class="btn-success text-sm">Crear cuenta</button>
-        </div>
-      </div>
-
-      <!-- Selección de rol (modo simulado) -->
-      <div v-if="modoPrueba && !rolSeleccionado" class="space-y-4">
-        <label class="block text-sm font-medium text-gray-700">Seleccioná tu rol:</label>
-        <div class="grid grid-cols-2 gap-2">
-          <button
-            v-for="rol in rolesDisponibles"
-            :key="rol.id"
-            @click="seleccionarRol(rol.id, rol.nombre)"
-            class="btn-secondary py-3 text-sm text-left hover:bg-blue-50 border border-gray-300"
-          >
-            {{ rol.nombre }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Botón de ingreso (modo simulado) -->
-      <div v-if="modoPrueba && rolSeleccionado" class="text-center mt-6">
-        <p class="text-sm text-gray-600 mb-4">
-          Ingresando como <strong>{{ rolSeleccionado.nombre }}</strong>
-        </p>
-        <button @click="ingresarModoPrueba" class="btn-primary w-full py-3">
-          Ingresar al sistema
-        </button>
-        <button @click="rolSeleccionado = null" class="btn-secondary text-sm mt-3">
-          Elegir otro rol
-        </button>
-      </div>
-
-      <!-- Mensaje de bienvenida (usuario autenticado en Supabase) -->
-      <div v-if="usandoSupabase && usuarioAutenticado" class="text-center mt-6">
-        <p class="text-sm text-gray-600 mb-4">
-          Bienvenido, {{ userName }} ({{ rolTexto }})
-        </p>
-        <button @click="ingresarSupabase" class="btn-primary w-full py-3">
-          Ingresar al sistema
-        </button>
-      </div>
-
-      <div class="mt-8 pt-6 border-t border-gray-200 text-center">
-        <p class="text-xs text-gray-400">
-          Primera versión: roles simulados. Sin contraseñas reales todavía.
-        </p>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { ROLES } from '@/utils/roles'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-const modoPrueba = computed(() => authStore.estaEnModoPrueba)
-const usandoSupabase = computed(() => authStore.usingSupabase)
-const usuarioAutenticado = computed(() => authStore.isAuthenticated)
-const userName = computed(() => authStore.userName)
-
-const rolSeleccionado = ref(null)
-const rolesDisponibles = ref(ROLES)
-
-// Formulario Supabase
-const email = ref('')
-const password = ref('')
-const showPassword = ref(false)   // controlar visibilidad de contraseña (login)
-const mostrarRegistro = ref(false)
-const regNombre = ref('')
-const regEmail = ref('')
-const regPassword = ref('')
-const showRegPassword = ref(false) // controlar visibilidad de contraseña (registro)
-const regRol = ref('tesorero')
-
-// Rol texto para mostrar
-const rolTexto = computed(() => {
-  if (!authStore.role) return '—'
-  const rol = ROLES.find((r) => r.id === authStore.role)
-  return rol ? rol.nombre : authStore.role
-})
-
-function seleccionarRol(id, nombre) {
-  rolSeleccionado.value = { id, nombre }
-}
-
-function ingresarModoPrueba() {
-  authStore.loginSimulado(rolSeleccionado.value.id, rolSeleccionado.value.nombre)
-  authStore.setUsingSupabase(false)
-  router.push('/')
-}
-
-async function iniciarSesionSupabase() {
+import { ref } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { ROLES } from "@/utils/roles";
+import Icon from "@/components/Icon.vue";
+const auth = useAuthStore(),
+  router = useRouter(),
+  route = useRoute();
+const selected = ref("administracion"),
+  email = ref(""),
+  password = ref(""),
+  visible = ref(false),
+  busy = ref(false),
+  error = ref("");
+async function login() {
+  busy.value = true;
+  error.value = "";
   try {
-    await authStore.login(email.value, password.value)
-    router.push('/')
-  } catch (error) {
-    alert('Error al iniciar sesión: ' + error.message)
+    if (auth.estaEnModoPrueba) auth.loginSimulado(selected.value);
+    else {
+      if (!email.value.trim() || !password.value)
+        throw Error("Completá el correo y la contraseña.");
+      await auth.login(email.value.trim(), password.value);
+    }
+    const next =
+      typeof route.query.redirect === "string" &&
+      route.query.redirect.startsWith("/")
+        ? route.query.redirect
+        : "/";
+    await router.push(next);
+  } catch (e) {
+    error.value = e.message;
+  } finally {
+    busy.value = false;
   }
-}
-
-async function registrarseSupabase() {
-  try {
-    await authStore.registrar(regEmail.value, regPassword.value, regRol.value, regNombre.value)
-    mostrarRegistro.value = false
-    alert('Cuenta creada. Ahora podés iniciar sesión.')
-  } catch (error) {
-    alert('Error al crear cuenta: ' + error.message)
-  }
-}
-
-function ingresarSupabase() {
-  router.push('/')
 }
 </script>
+<template>
+  <main class="login-page">
+    <section class="login-story">
+      <div class="brand brand-light">
+        <span class="brand-symbol"><Icon name="Sprout" :size="30" /></span
+        ><span>La Viandita<small>PRECOOPERATIVA ESCOLAR</small></span>
+      </div>
+      <div class="login-story-content">
+        <span class="welcome-label"
+          >DE NUESTRA ESCUELA, PARA NUESTRA ESCUELA</span
+        >
+        <h1>Una buena idea<br />crece cuando<br />la compartimos.</h1>
+        <p>
+          Organizamos un servicio de viandas accesibles y aprendemos a construir
+          una cooperativa, entre todos.
+        </p>
+        <div class="login-values">
+          <span><Icon name="Utensils" :size="20" />Alimentación accesible</span
+          ><span
+            ><Icon name="HeartHandshake" :size="20" />Trabajo cooperativo</span
+          ><span><Icon name="Sprout" :size="20" />Aprender haciendo</span>
+        </div>
+      </div>
+      <p class="login-credit">Sebastián Lopez y Ariel Aranda · 7°3</p>
+    </section>
+    <section class="login-panel">
+      <div class="login-card">
+        <span class="eyebrow">BIENVENIDO A NUESTRO ESPACIO</span>
+        <h2>Todo listo para empezar.</h2>
+        <p class="muted">
+          {{
+            auth.estaEnModoPrueba
+              ? "Elegí un rol para recorrer el proyecto."
+              : "Ingresá con tu cuenta para continuar."
+          }}
+        </p>
+        <form @submit.prevent="login" class="login-form">
+          <p v-if="error" class="alert alert-error" role="alert">{{ error }}</p>
+          <template v-if="auth.estaEnModoPrueba"
+            ><label class="label" for="demo-role">Ingresar como</label>
+            <div class="role-picker">
+              <label
+                v-for="role in ROLES"
+                :key="role.id"
+                :class="{ selected: selected === role.id }"
+                ><input
+                  v-model="selected"
+                  type="radio"
+                  name="role"
+                  :value="role.id"
+                  :aria-label="role.nombre" />
+                <div>
+                  <strong>{{ role.nombre }}</strong
+                  ><small>{{ role.descripcion }}</small>
+                </div>
+                <Icon v-if="selected === role.id" name="CircleCheck" :size="19"
+              /></label></div></template
+          ><template v-else
+            ><label for="login-email" class="label">Correo electrónico</label
+            ><input
+              id="login-email"
+              v-model="email"
+              type="email"
+              class="input"
+              autocomplete="username"
+              required
+            /><label for="login-password" class="label mt-4">Contraseña</label>
+            <div class="password-field">
+              <input
+                id="login-password"
+                v-model="password"
+                :type="visible ? 'text' : 'password'"
+                class="input"
+                autocomplete="current-password"
+                required
+              /><button
+                type="button"
+                class="icon-button"
+                :aria-label="
+                  visible ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                "
+                @click="visible = !visible"
+              >
+                <Icon :name="visible ? 'EyeOff' : 'Eye'" />
+              </button>
+            </div>
+            <p class="helper mt-3">
+              Las cuentas y sus permisos son asignados por el responsable de la
+              cooperativa.
+            </p></template
+          ><button class="btn-primary login-submit" :disabled="busy">
+            {{ busy ? "Ingresando…" : "Ingresar al sistema"
+            }}<Icon name="ArrowRight" :size="18" />
+          </button>
+        </form>
+        <div v-if="auth.estaEnModoPrueba" class="login-demo">
+          <Icon name="Info" :size="19" />
+          <p>
+            <strong>Estás en modo demostración.</strong><br />Roles simulados y
+            datos ficticios. Los cambios se guardan en este navegador; no se
+            comparten entre dispositivos.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+</template>

@@ -1,192 +1,109 @@
-/**
- * Store de autenticación.
- *
- * Paso 15: autenticación con Supabase Auth.
- *
- * Cómo funciona:
- * - Si Supabase está configurado (.env con VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY),
- *   se usa Supabase Auth real (iniciar sesión, cerrar sesión, obtener usuario).
- * - Si no está configurado, se usa MODO SIMULADO: el usuario elige un rol al entrar
- *   y no se pide contraseña (primera versión).
- *
- * El rol se guarda en la tabla `usuarios` de Supabase y se recupera al iniciar sesión.
- */
-
-import { defineStore } from 'pinia'
-import { supabase, supabaseConfigurado } from '@/services/supabase'
-import { ROLES } from '@/utils/roles'
-
-export const useAuthStore = defineStore('auth', {
+import { defineStore } from "pinia";
+import { supabase, supabaseConfigurado } from "@/services/supabase";
+import { ROLES } from "@/utils/roles";
+const KEY = "viandita-session-v1";
+export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: null,        // objeto de usuario de Supabase Auth o null
-    role: null,        // rol del usuario (tesorero, administracion, etc.)
+    user: null,
+    role: null,
     userName: null,
-    usingSupabase: false, // true si Supabase está configurado
+    usingSupabase: supabaseConfigurado(),
+    initialized: false,
     listaRoles: ROLES,
   }),
   actions: {
-    /**
-     * Inicializa el store: verifica si hay sesión activa en Supabase.
-     */
     async inicializar() {
-      this.usingSupabase = supabaseConfigurado()
-
+      if (this.initialized) return;
       if (!this.usingSupabase) {
-        // Modo simulado: no hay sesión real
-        this.user = null
-        this.role = null
-        this.userName = null
-        return
-      }
-
-      // Escuchar cambios de sesión en Supabase
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session && session.user) {
-          this.user = session.user
-          this.userName = session.user.email || 'Usuario'
-          await this.cargarRolDesdeBD(session.user.id)
-        } else {
-          this.user = null
-          this.role = null
-          this.userName = null
+        try {
+          const saved = JSON.parse(sessionStorage.getItem(KEY));
+          if (ROLES.some((r) => r.id === saved?.role))
+            this.loginSimulado(saved.role, saved.userName);
+        } catch {
+          /* Sesión inválida: volver a ingresar. */
         }
-      })
-
-      // Verificar sesión existente al cargar la app
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session && session.user) {
-        this.user = session.user
-        this.userName = session.user.email || 'Usuario'
-        await this.cargarRolDesdeBD(session.user.id)
-      }
-    },
-
-    /**
-     * Carga el rol del usuario desde la tabla usuarios de Supabase.
-     */
-    async cargarRolDesdeBD(authUserId) {
-      if (!supabaseConfigurado()) return
-
-      try {
-        const { data, error } = await supabase
-          .from('usuarios')
-          .select('rol, nombre')
-          .eq('auth_user_id', authUserId)
-          .single()
-
-        if (!error && data) {
-          this.role = data.rol
-          this.userName = data.nombre || this.userName
+      } else {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (data.session) {
+          this.user = data.session.user;
+          await this.cargarRolDesdeBD(this.user.id);
         }
-      } catch (e) {
-        console.warn('No se pudo cargar el rol desde la base de datos:', e)
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "INITIAL_SESSION") return;
+          if (session?.user.id === this.user?.id && this.role) {
+            this.user = session.user;
+            return;
+          }
+          this.role = null;
+          this.user = session?.user || null;
+          this.userName = null;
+          if (this.user)
+            setTimeout(
+              () =>
+                this.cargarRolDesdeBD(this.user.id).catch(() => {
+                  this.role = null;
+                }),
+              0,
+            );
+        });
       }
+      this.initialized = true;
     },
-
-    /**
-     * Inicio de sesión simulado (modo prueba sin Supabase).
-     * El usuario elige el rol y no hay contraseña real.
-     */
-    loginSimulado(role, userName = 'Usuario') {
-      if (supabaseConfigurado()) {
-        console.warn('loginSimulado solo se usa en modo prueba. Usá login() con Supabase.')
-        return
+    async cargarRolDesdeBD(id) {
+      this.role = null;
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select("rol,nombre,activo")
+        .eq("auth_user_id", id)
+        .single();
+      if (error) {
+        if (error.code === "PGRST116")
+          throw Error(
+            "Tu cuenta no tiene un perfil habilitado. El responsable debe vincularla en la tabla usuarios.",
+          );
+        throw error;
       }
-      this.user = { id: 'simulado-' + role, email: role + '@prueba.edu.ar' }
-      this.role = role
-      this.userName = userName
+      if (!data.activo || !ROLES.some((r) => r.id === data.rol))
+        throw Error(
+          "La cuenta no tiene un perfil habilitado. Consultá al responsable.",
+        );
+      this.role = data.rol;
+      this.userName = data.nombre;
     },
-
-    /**
-     * Inicio de sesión real con Supabase Auth (email + contraseña).
-     */
+    loginSimulado(role, userName) {
+      if (this.usingSupabase || !ROLES.some((r) => r.id === role))
+        throw Error("Rol no válido.");
+      this.user = { id: "simulado-" + role };
+      this.role = role;
+      this.userName = userName || ROLES.find((r) => r.id === role).nombre;
+      sessionStorage.setItem(
+        KEY,
+        JSON.stringify({ role, userName: this.userName }),
+      );
+    },
     async login(email, password) {
-      if (!supabaseConfigurado()) {
-        throw new Error('Supabase no está configurado. Usá loginSimulado().')
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
-
-      if (error) throw error
-
-      if (data.user) {
-        this.user = data.user
-        this.userName = data.user.email || 'Usuario'
-        await this.cargarRolDesdeBD(data.user.id)
-      }
-
-      return { data, error: null }
+      });
+      if (error) throw error;
+      this.user = data.user;
+      await this.cargarRolDesdeBD(data.user.id);
     },
-
-    /**
-     * Registro de nuevo usuario (solo para crear la cuenta en Supabase Auth).
-     * El rol se asigna después desde la tabla usuarios.
-     */
-    async registrar(email, password, rol, nombre) {
-      if (!supabaseConfigurado()) {
-        throw new Error('Supabase no está configurado.')
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-
-      if (error) throw error
-
-      if (data.user) {
-        // Crear el registro en la tabla usuarios vinculado al auth_user_id
-        await supabase.from('usuarios').insert({
-          auth_user_id: data.user.id,
-          email,
-          nombre,
-          rol,
-          activo: true,
-        })
-        this.user = data.user
-        this.role = rol
-        this.userName = nombre
-      }
-
-      return { data, error: null }
-    },
-
-    /**
-     * Cerrar sesión.
-     */
     async logout() {
-      if (supabaseConfigurado()) {
-        await supabase.auth.signOut()
+      if (this.usingSupabase) {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
       }
-      this.user = null
-      this.role = null
-      this.userName = null
-    },
-
-    /**
-     * Establece el rol manualmente (solo modo simulado).
-     */
-    setRole(role) {
-      this.role = role
-    },
-
-    setUsingSupabase(value) {
-      this.usingSupabase = value
+      sessionStorage.removeItem(KEY);
+      this.user = null;
+      this.role = null;
+      this.userName = null;
     },
   },
   getters: {
-    isAuthenticated: (state) => state.user !== null,
-    rolActual: (state) => state.role,
-    puedeLeerTablero: (state) => [
-      'tesorero', 'administracion', 'distribucion', 'secretario',
-      'asociado', 'docente_asesor', 'director'
-    ].includes(state.role),
-    puedeEscribir: (state) => [
-      'tesorero', 'administracion', 'distribucion', 'secretario'
-    ].includes(state.role),
-    estaEnModoPrueba: (state) => !state.usingSupabase,
+    isAuthenticated: (s) => !!s.user && !!s.role,
+    estaEnModoPrueba: (s) => !s.usingSupabase,
   },
-})
+});
