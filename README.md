@@ -96,3 +96,11 @@ Los tests unitarios verifican metas, denominadores, períodos y conteo de person
 ## Límites del proyecto
 
 El sistema gestiona registros; no certifica seguridad alimentaria, autorización de actividades, aprobación de actas o firma de documentos. Encuestas, piloto alimentario, control de stock, trazabilidad sanitaria, comprobantes fiscales y ahorro real deben desarrollarse o verificarse con la escuela. Los gráficos usan texto, escalas desde cero y colores consistentes. El informe de seguimiento del sistema es distinto del informe final documental del proyecto.
+
+## Publicación en GitHub Pages
+
+Sitio: https://nicori25.github.io/La_Viandita/
+
+El workflow `.github/workflows/pages.yml` compila y publica automáticamente cada cambio en `main`. Ejecuta los tests unitarios antes de publicar. Usa `/La_Viandita/` como base y rutas con `#` para que las recargas y los enlaces internos funcionen sin un servidor de rutas. En desarrollo se conservan las rutas habituales.
+
+La versión publicada se conecta a Supabase con la clave pública del cliente; requiere iniciar sesión con una cuenta activa de Auth vinculada en `usuarios`. No incluye claves administrativas ni cambia las políticas de la base. Si se habilitan enlaces de confirmación o recuperación por correo, configurar en Supabase Auth la Site URL y las redirecciones permitidas con la URL de Pages. El ingreso por correo y contraseña de una cuenta confirmada no requiere redirección.

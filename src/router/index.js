@@ -1,4 +1,8 @@
-import { createRouter, createWebHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  createWebHashHistory,
+} from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { MODULOS, puedeAcceder } from "@/utils/roles";
 import { modules } from "@/data/modules";
@@ -9,7 +13,10 @@ const pages = {
   Datos: () => import("@/views/DatosView.vue"),
 };
 const router = createRouter({
-  history: createWebHistory(),
+  history:
+    import.meta.env.VITE_ROUTER_MODE === "hash"
+      ? createWebHashHistory(import.meta.env.BASE_URL)
+      : createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: "/login",
