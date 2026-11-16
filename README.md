@@ -117,3 +117,13 @@ En Supabase → Authentication → URL Configuration, configurar:
 El callback usa un parámetro de consulta para distinguir el flujo de recuperación sin interferir con las rutas hash de GitHub Pages. Sin una sesión válida no permite cambiar la contraseña. Si el enlace venció o ya se usó, solicitar otro. El envío depende del proveedor SMTP y de los límites de correo de Supabase; revisar Spam.
 
 `npm run test:auth` prueba el flujo con respuestas Auth simuladas y la misma base y rutas hash de Pages. No envía correos ni modifica cuentas reales.
+
+## Registro de cuentas
+
+Desde el ingreso, **Crear cuenta** abre el formulario de nombre, correo, contraseña y repetición. No permite elegir roles administrativos. Supabase envía la confirmación si está habilitada; al confirmar e ingresar se crea un perfil propio de **Asociado**. Si el proyecto tiene confirmación automática, se crea el perfil y se ingresa directamente.
+
+Ejecutar una vez `sql/upgrade_registro.sql` desde SQL Editor para habilitar la creación del perfil propio. La función usa la identidad autenticada y el correo confirmado de Auth, no acepta argumentos del cliente y asigna el rol fijo `asociado`. No cambia ni reactiva perfiles existentes, de modo que preserva Administración y los demás roles ya asignados. Las contraseñas solo se envían a Supabase Auth; no se guardan en `usuarios` ni en el código.
+
+En Authentication → URL Configuration, incluir `https://nicori25.github.io/La_Viandita/` en las redirecciones permitidas para confirmar el correo. Mantener también la URL de recuperación documentada arriba. Habilitar el registro por correo en el proveedor Email si el proyecto lo tiene desactivado.
+
+Registrar una cuenta no crea una suscripción, un pago ni una ficha de participación cooperativa. Los permisos de gestión se asignan administrativamente. `npm run test:auth` cubre el registro con confirmación, el perfil propio, las validaciones y la falta de migración usando respuestas simuladas, sin crear usuarios ni enviar correos reales.

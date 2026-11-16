@@ -22,3 +22,7 @@ Las tablas ya existían en el proyecto al comprobar la conexión el 16/11/2026: 
 - Consultas a las nueve tablas operativas con `limit=0`: HTTP 200; no se descargaron datos personales.
 - `resumen_periodo`: no existía (`PGRST202`). La migración requiere SQL Editor o una conexión administrativa que no se proporcionó.
 - No se crearon cuentas ni se alteraron registros remotos con la clave pública.
+
+## Habilitar el registro desde la web
+
+Ejecutar `upgrade_registro.sql` una sola vez en SQL Editor. La función autenticada `asegurar_mi_perfil()` crea exclusivamente el perfil propio con rol Asociado después de confirmar el correo. No acepta roles ni identificadores y no modifica perfiles existentes. En Authentication → URL Configuration, agregar `https://nicori25.github.io/La_Viandita/` a Redirect URLs para el enlace de confirmación; conservar también la URL de recuperación.

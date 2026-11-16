@@ -24,6 +24,12 @@ const router = createRouter({
       component: () => import("@/views/LoginView.vue"),
     },
     {
+      path: "/registro",
+      name: "Registro",
+      component: () => import("@/views/RegistroView.vue"),
+      meta: { title: "Crear cuenta" },
+    },
+    {
       path: "/restablecer",
       name: "Restablecer",
       component: () => import("@/views/RestablecerView.vue"),
@@ -45,6 +51,7 @@ router.beforeEach((to) => {
   if (auth.recovering && auth.user) return "/restablecer";
   if (auth.recovering && !auth.user && to.name !== "Login")
     return { path: "/login", query: { recovery: "expired" } };
+  if (to.name === "Registro") return auth.isAuthenticated ? "/" : true;
   if (to.name === "Login") return auth.isAuthenticated ? "/" : true;
   if (!auth.isAuthenticated)
     return { path: "/login", query: { redirect: to.fullPath } };

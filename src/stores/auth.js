@@ -63,18 +63,23 @@ export const useAuthStore = defineStore("auth", {
     },
     async cargarRolDesdeBD(id) {
       this.role = null;
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("usuarios")
         .select("rol,nombre,activo")
         .eq("auth_user_id", id)
         .single();
-      if (error) {
-        if (error.code === "PGRST116")
+      if (error?.code === "PGRST116") {
+        const result = await supabase.rpc("asegurar_mi_perfil");
+        if (result.error?.code === "PGRST202")
           throw Error(
-            "Tu cuenta no tiene un perfil habilitado. El responsable debe vincularla en la tabla usuarios.",
+            "El registro todavía no está habilitado. Pedí al responsable que complete la configuración.",
           );
-        throw error;
+        data = result.data;
+        error = result.error;
       }
+      if (error) throw error;
+      if (!data)
+        throw Error("No se pudo obtener tu perfil. Volvé a iniciar sesión.");
       if (!data.activo || !ROLES.some((r) => r.id === data.rol))
         throw Error(
           "La cuenta no tiene un perfil habilitado. Consultá al responsable.",
@@ -101,6 +106,29 @@ export const useAuthStore = defineStore("auth", {
       if (error) throw error;
       this.user = data.user;
       await this.cargarRolDesdeBD(data.user.id);
+    },
+    async registrar(nombre, email, password) {
+      if (!this.usingSupabase)
+        throw Error("El registro requiere la conexión a Supabase.");
+      const redirect = new URL(import.meta.env.BASE_URL, location.origin);
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: { nombre: nombre.trim() },
+          emailRedirectTo: redirect.href,
+        },
+      });
+      if (error) throw error;
+      if (data.session) {
+        this.user = data.user;
+        try {
+          await this.cargarRolDesdeBD(data.user.id);
+        } catch (e) {
+          return { confirmationRequired: false, profileError: e.message };
+        }
+      }
+      return { confirmationRequired: !data.session, profileError: null };
     },
     async solicitarRecuperacion(email) {
       if (!this.usingSupabase)

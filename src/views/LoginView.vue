@@ -170,14 +170,18 @@ async function login() {
               Olvidé mi contraseña
             </button>
             <p class="helper mt-3">
-              Las cuentas y sus permisos son asignados por el responsable de la
-              cooperativa.
+              Las cuentas nuevas ingresan como Asociado. Los permisos de gestión
+              los asigna el responsable de la cooperativa.
             </p></template
           ><button class="btn-primary login-submit" :disabled="busy">
             {{ busy ? "Ingresando…" : "Ingresar al sistema"
             }}<Icon name="ArrowRight" :size="18" />
           </button>
         </form>
+        <p v-if="!auth.estaEnModoPrueba" class="muted mt-5">
+          ¿Todavía no tenés cuenta?
+          <RouterLink to="/registro" class="text-link">Crear cuenta</RouterLink>
+        </p>
         <div v-if="auth.estaEnModoPrueba" class="login-demo">
           <Icon name="Info" :size="19" />
           <p>
