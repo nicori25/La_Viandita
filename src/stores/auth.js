@@ -9,6 +9,10 @@ export const useAuthStore = defineStore("auth", {
     userName: null,
     usingSupabase: supabaseConfigurado(),
     initialized: false,
+    recovering:
+      new URLSearchParams(location.search).get("recuperar") === "1" ||
+      location.pathname.endsWith("/restablecer") ||
+      location.hash.startsWith("#/restablecer"),
     listaRoles: ROLES,
   }),
   actions: {
@@ -23,30 +27,37 @@ export const useAuthStore = defineStore("auth", {
           /* Sesión inválida: volver a ingresar. */
         }
       } else {
+        // Registrar el evento antes de restaurar la sesión: el enlace de recuperación
+        // puede llegar al iniciar la aplicación, antes de que exista el router.
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "PASSWORD_RECOVERY") this.recovering = true;
+          if (event === "INITIAL_SESSION") return;
+          if (
+            session?.user.id === this.user?.id &&
+            this.role &&
+            !this.recovering
+          ) {
+            this.user = session.user;
+            return;
+          }
+          this.user = session?.user || null;
+          this.role = null;
+          this.userName = null;
+          const id = this.user?.id;
+          if (id && !this.recovering)
+            setTimeout(() => {
+              if (this.user?.id !== id) return;
+              this.cargarRolDesdeBD(id).catch(() => {
+                this.role = null;
+              });
+            }, 0);
+        });
         const { data, error } = await supabase.auth.getSession();
         if (error) throw error;
         if (data.session) {
           this.user = data.session.user;
-          await this.cargarRolDesdeBD(this.user.id);
+          if (!this.recovering) await this.cargarRolDesdeBD(this.user.id);
         }
-        supabase.auth.onAuthStateChange((event, session) => {
-          if (event === "INITIAL_SESSION") return;
-          if (session?.user.id === this.user?.id && this.role) {
-            this.user = session.user;
-            return;
-          }
-          this.role = null;
-          this.user = session?.user || null;
-          this.userName = null;
-          if (this.user)
-            setTimeout(
-              () =>
-                this.cargarRolDesdeBD(this.user.id).catch(() => {
-                  this.role = null;
-                }),
-              0,
-            );
-        });
       }
       this.initialized = true;
     },
@@ -91,6 +102,32 @@ export const useAuthStore = defineStore("auth", {
       this.user = data.user;
       await this.cargarRolDesdeBD(data.user.id);
     },
+    async solicitarRecuperacion(email) {
+      if (!this.usingSupabase)
+        throw Error(
+          "La recuperación está disponible para cuentas de Supabase.",
+        );
+      const redirect = new URL(import.meta.env.BASE_URL, location.origin);
+      redirect.searchParams.set("recuperar", "1");
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        { redirectTo: redirect.href },
+      );
+      if (error) throw error;
+    },
+    async cambiarPassword(password) {
+      if (!this.usingSupabase || !this.user)
+        throw Error("El enlace venció. Solicitá uno nuevo desde el ingreso.");
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      this.recovering = false;
+      // El cambio ya está confirmado; cerrar únicamente esta sesión temporal.
+      const result = await supabase.auth.signOut({ scope: "local" });
+      this.user = null;
+      this.role = null;
+      this.userName = null;
+      return { signOutError: result.error?.message || null };
+    },
     async logout() {
       if (this.usingSupabase) {
         const { error } = await supabase.auth.signOut();
@@ -100,6 +137,7 @@ export const useAuthStore = defineStore("auth", {
       this.user = null;
       this.role = null;
       this.userName = null;
+      this.recovering = false;
     },
   },
   getters: {

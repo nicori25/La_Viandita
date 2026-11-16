@@ -13,6 +13,37 @@ const selected = ref("administracion"),
   visible = ref(false),
   busy = ref(false),
   error = ref("");
+const recoveryDialog = ref(null),
+  recoveryEmail = ref(""),
+  recoveryBusy = ref(false),
+  recoveryMessage = ref(""),
+  recoveryError = ref("");
+async function requestRecovery() {
+  recoveryBusy.value = true;
+  recoveryMessage.value = "";
+  recoveryError.value = "";
+  try {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recoveryEmail.value.trim()))
+      throw Error("Ingresá un correo válido.");
+    await auth.solicitarRecuperacion(recoveryEmail.value);
+    recoveryMessage.value =
+      "Si existe una cuenta con ese correo, recibirás un enlace para elegir una contraseña nueva. Revisá también Spam.";
+  } catch (e) {
+    recoveryError.value =
+      e.code === "over_email_send_rate_limit"
+        ? "Esperá un minuto antes de solicitar otro enlace."
+        : e.message;
+  } finally {
+    recoveryBusy.value = false;
+  }
+}
+function openRecovery() {
+  recoveryEmail.value = email.value;
+  recoveryMessage.value = "";
+  recoveryError.value = "";
+  recoveryDialog.value.showModal();
+}
+
 async function login() {
   busy.value = true;
   error.value = "";
@@ -30,7 +61,10 @@ async function login() {
         : "/";
     await router.push(next);
   } catch (e) {
-    error.value = e.message;
+    error.value =
+      e.code === "invalid_credentials"
+        ? "El correo o la contraseña no son correctos. Podés recuperar el acceso con «Olvidé mi contraseña»."
+        : e.message;
   } finally {
     busy.value = false;
   }
@@ -73,6 +107,16 @@ async function login() {
           }}
         </p>
         <form @submit.prevent="login" class="login-form">
+          <p
+            v-if="route.query.changed"
+            class="alert alert-success"
+            role="status"
+          >
+            Contraseña actualizada. Iniciá sesión con la nueva contraseña.
+          </p>
+          <p v-if="route.query.recovery" class="alert alert-error" role="alert">
+            El enlace no abrió una sesión válida. Solicitá uno nuevo.
+          </p>
           <p v-if="error" class="alert alert-error" role="alert">{{ error }}</p>
           <template v-if="auth.estaEnModoPrueba"
             ><label class="label" for="demo-role">Ingresar como</label>
@@ -122,6 +166,9 @@ async function login() {
                 <Icon :name="visible ? 'EyeOff' : 'Eye'" />
               </button>
             </div>
+            <button type="button" class="text-link mt-3" @click="openRecovery">
+              Olvidé mi contraseña
+            </button>
             <p class="helper mt-3">
               Las cuentas y sus permisos son asignados por el responsable de la
               cooperativa.
@@ -141,5 +188,53 @@ async function login() {
         </div>
       </div>
     </section>
+    <dialog
+      ref="recoveryDialog"
+      class="dialog-card"
+      aria-labelledby="recovery-title"
+      @cancel.prevent="!recoveryBusy && recoveryDialog.close()"
+    >
+      <h2 id="recovery-title">Recuperar acceso</h2>
+      <p class="muted mt-3">
+        Te enviaremos un enlace para elegir una nueva contraseña.
+      </p>
+      <form @submit.prevent="requestRecovery">
+        <label for="recovery-email" class="label mt-4"
+          >Correo de tu cuenta</label
+        ><input
+          id="recovery-email"
+          v-model="recoveryEmail"
+          type="email"
+          class="input"
+          autocomplete="email"
+          required
+        />
+        <p
+          v-if="recoveryMessage"
+          class="alert alert-success mt-4"
+          role="status"
+        >
+          {{ recoveryMessage }}
+        </p>
+        <p v-if="recoveryError" class="alert alert-error mt-4" role="alert">
+          {{ recoveryError }}
+        </p>
+        <div class="dialog-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            :disabled="recoveryBusy"
+            @click="recoveryDialog.close()"
+          >
+            Cerrar</button
+          ><button
+            class="btn-primary"
+            :disabled="recoveryBusy || !!recoveryMessage"
+          >
+            {{ recoveryBusy ? "Enviando…" : "Enviar enlace" }}
+          </button>
+        </div>
+      </form>
+    </dialog>
   </main>
 </template>

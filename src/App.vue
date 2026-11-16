@@ -29,7 +29,11 @@ async function logout() {
 }
 </script>
 <template>
-  <RouterView v-if="!auth.isAuthenticated" />
+  <RouterView
+    v-if="
+      !auth.isAuthenticated || auth.recovering || route.name === 'Restablecer'
+    "
+  />
   <div v-else class="app-shell">
     <button
       v-if="menuOpen"

@@ -104,3 +104,16 @@ Sitio: https://nicori25.github.io/La_Viandita/
 El workflow `.github/workflows/pages.yml` compila y publica automáticamente cada cambio en `main`. Ejecuta los tests unitarios antes de publicar. Usa `/La_Viandita/` como base y rutas con `#` para que las recargas y los enlaces internos funcionen sin un servidor de rutas. En desarrollo se conservan las rutas habituales.
 
 La versión publicada se conecta a Supabase con la clave pública del cliente; requiere iniciar sesión con una cuenta activa de Auth vinculada en `usuarios`. No incluye claves administrativas ni cambia las políticas de la base. Si se habilitan enlaces de confirmación o recuperación por correo, configurar en Supabase Auth la Site URL y las redirecciones permitidas con la URL de Pages. El ingreso por correo y contraseña de una cuenta confirmada no requiere redirección.
+
+## Recuperar una contraseña
+
+En el ingreso publicado, pulsar **Olvidé mi contraseña** e ingresar el correo de la cuenta de Auth. El enlace enviado por Supabase abre un formulario para elegir una contraseña nueva de al menos 12 caracteres. Después del cambio se cierra la sesión temporal y se vuelve al ingreso. No se solicitan contraseñas en el chat ni se asignan roles durante la recuperación.
+
+En Supabase → Authentication → URL Configuration, configurar:
+
+- Site URL: `https://nicori25.github.io/La_Viandita/`
+- Redirect URLs: `https://nicori25.github.io/La_Viandita/?recuperar=1`
+
+El callback usa un parámetro de consulta para distinguir el flujo de recuperación sin interferir con las rutas hash de GitHub Pages. Sin una sesión válida no permite cambiar la contraseña. Si el enlace venció o ya se usó, solicitar otro. El envío depende del proveedor SMTP y de los límites de correo de Supabase; revisar Spam.
+
+`npm run test:auth` prueba el flujo con respuestas Auth simuladas y la misma base y rutas hash de Pages. No envía correos ni modifica cuentas reales.

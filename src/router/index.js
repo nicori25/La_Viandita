@@ -23,6 +23,12 @@ const router = createRouter({
       name: "Login",
       component: () => import("@/views/LoginView.vue"),
     },
+    {
+      path: "/restablecer",
+      name: "Restablecer",
+      component: () => import("@/views/RestablecerView.vue"),
+      meta: { title: "Nueva contraseña" },
+    },
     ...MODULOS.map((m) => ({
       path: m.path,
       name: m.name,
@@ -35,6 +41,10 @@ const router = createRouter({
 });
 router.beforeEach((to) => {
   const auth = useAuthStore();
+  if (to.name === "Restablecer") return true;
+  if (auth.recovering && auth.user) return "/restablecer";
+  if (auth.recovering && !auth.user && to.name !== "Login")
+    return { path: "/login", query: { recovery: "expired" } };
   if (to.name === "Login") return auth.isAuthenticated ? "/" : true;
   if (!auth.isAuthenticated)
     return { path: "/login", query: { redirect: to.fullPath } };
