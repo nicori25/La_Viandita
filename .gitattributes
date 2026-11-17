@@ -1,0 +1,5 @@
+# Los documentos y las imágenes generados no deben fusionarse como texto.
+*.pdf binary
+*.docx binary
+*.pptx binary
+*.png binary
