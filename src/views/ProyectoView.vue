@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from "@/components/BrandLogo.vue";
 import { useAuthStore } from "@/stores/auth";
 import { MODULOS, puedeAcceder } from "@/utils/roles";
 const auth = useAuthStore();
@@ -55,7 +56,7 @@ const steps = [
           reales.
         </p>
       </div>
-      <Icon name="Sprout" :size="45" />
+      <BrandLogo variant="project" />
     </div>
     <article class="card project-intro">
       <h2>¿Qué necesidad queremos resolver?</h2>

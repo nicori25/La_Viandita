@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from "@/components/BrandLogo.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
@@ -68,9 +69,11 @@ async function register() {
 <template>
   <main class="login-panel" style="min-height: 100vh">
     <section class="login-card">
-      <RouterLink to="/login" class="brand mb-8"
-        ><span class="brand-symbol"><Icon name="Sprout" :size="28" /></span>La
-        Viandita</RouterLink
+      <RouterLink
+        to="/login"
+        class="form-brand"
+        aria-label="La Viandita: volver al ingreso"
+        ><BrandLogo variant="form" /></RouterLink
       ><span class="eyebrow">SUMATE A NUESTRO ESPACIO</span>
       <h1>Creá tu cuenta</h1>
       <template v-if="created"

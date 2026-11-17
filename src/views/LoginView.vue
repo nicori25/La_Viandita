@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from "@/components/BrandLogo.vue";
 import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
@@ -73,10 +74,7 @@ async function login() {
 <template>
   <main class="login-page">
     <section class="login-story">
-      <div class="brand brand-light">
-        <span class="brand-symbol"><Icon name="Sprout" :size="30" /></span
-        ><span>La Viandita<small>PRECOOPERATIVA ESCOLAR</small></span>
-      </div>
+      <div class="login-brand"><BrandLogo variant="login" /></div>
       <div class="login-story-content">
         <span class="welcome-label"
           >DE NUESTRA ESCUELA, PARA NUESTRA ESCUELA</span

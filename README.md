@@ -127,3 +127,9 @@ Ejecutar una vez `sql/upgrade_registro.sql` desde SQL Editor para habilitar la c
 En Authentication → URL Configuration, incluir `https://nicori25.github.io/La_Viandita/` en las redirecciones permitidas para confirmar el correo. Mantener también la URL de recuperación documentada arriba. Habilitar el registro por correo en el proveedor Email si el proyecto lo tiene desactivado.
 
 Registrar una cuenta no crea una suscripción, un pago ni una ficha de participación cooperativa. Los permisos de gestión se asignan administrativamente. `npm run test:auth` cubre el registro con confirmación, el perfil propio, las validaciones y la falta de migración usando respuestas simuladas, sin crear usuarios ni enviar correos reales.
+
+## Identidad visual y documentación
+
+El logo principal de La Viandita se utiliza en el ingreso, navegación, registro, recuperación, proyecto, tablero, informe imprimible y favicon. `BrandLogo.vue` resuelve la ruta base y conserva las proporciones. La versión transparente está en `public/branding/` y se presenta sobre fondos claros para mantener la legibilidad del lema.
+
+La carpeta [docs](docs/README.md) contiene la documentación con su portada actualizada, versión Word, seguimiento y exposición en PowerPoint y PDF. Los anexos originales se conservan sin modificar. La renovación visual del 17/11/2026 no cambia el carácter ficticio de los ejemplos ni las verificaciones pendientes de la documentación funcional.

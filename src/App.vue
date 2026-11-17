@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from "@/components/BrandLogo.vue";
 import { ref, computed, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
@@ -46,12 +47,12 @@ async function logout() {
       :class="{ open: menuOpen }"
       aria-label="Navegación principal"
     >
-      <RouterLink to="/" class="brand"
-        ><span class="brand-symbol"><Icon name="Sprout" :size="29" /></span
-        ><span
-          >La Viandita<small>PRECOOPERATIVA ESCOLAR</small></span
-        ></RouterLink
-      >
+      <RouterLink
+        to="/"
+        class="brand-home"
+        aria-label="La Viandita: ir al resumen"
+        ><BrandLogo variant="sidebar"
+      /></RouterLink>
       <div class="sidebar-context">
         <span class="context-avatar">LV</span
         ><span>Nuestro espacio<small>Gestión de la cooperativa</small></span
@@ -99,7 +100,7 @@ async function logout() {
             @click="menuOpen = !menuOpen"
           >
             <Icon name="Menu" /></button
-          ><span class="breadcrumb"
+          ><BrandLogo variant="topbar" /><span class="breadcrumb"
             >Nuestro espacio <Icon name="ChevronRight" :size="14" />
             <strong>{{ route.meta.title }}</strong></span
           >
@@ -134,9 +135,7 @@ async function logout() {
         <span
           >© {{ new Date().getFullYear() }} La Viandita · Precooperativa
           escolar</span
-        ><span
-          >Hecho para aprender y compartir <Icon name="Sprout" :size="14"
-        /></span>
+        ><span>Mejor, entre todos.</span>
       </footer>
     </div>
   </div>

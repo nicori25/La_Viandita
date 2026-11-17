@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from "@/components/BrandLogo.vue";
 import { ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useAnalytics } from "@/composables/useAnalytics";
@@ -60,7 +61,8 @@ function print() {
     </div>
     <template v-else-if="result"
       ><article class="card report-intro">
-        <div class="section-line">
+        <div class="section-line report-brand-heading">
+          <BrandLogo variant="report" />
           <div>
             <span class="eyebrow">LA VIANDITA · PRECOOPERATIVA ESCOLAR</span>
             <h2>Seguimiento de gestión</h2>

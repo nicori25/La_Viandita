@@ -1992,3 +1992,142 @@ code {
     visibility: visible;
   }
 }
+/* Identidad principal: logo aportado para La Viandita. */
+:root {
+  --green: #0b543f;
+  --brand-gold: #bd8b26;
+}
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+.brand-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.brand-home {
+  display: flex;
+  justify-content: center;
+  padding: 0 4px;
+}
+.brand-logo--sidebar {
+  width: 182px;
+}
+.sidebar-context {
+  margin-top: 20px;
+}
+.login-brand {
+  width: max-content;
+  max-width: 100%;
+  background: #fcf9ed;
+  padding: 12px 18px;
+  border-radius: 14px;
+}
+.brand-logo--login {
+  width: 234px;
+}
+.form-brand {
+  display: flex;
+  justify-content: center;
+  padding: 0 0 26px;
+}
+.brand-logo--form {
+  width: 220px;
+}
+.hero-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 20px;
+  border-radius: 16px;
+  background: #fcf9ed;
+  width: 260px;
+  max-width: 42%;
+  flex-shrink: 0;
+}
+.brand-logo--hero {
+  width: 220px;
+}
+.brand-logo--project {
+  width: 170px;
+}
+.brand-logo--report {
+  width: 150px;
+}
+.report-brand-heading {
+  flex-wrap: wrap;
+}
+.report-brand-heading > div {
+  flex: 1;
+  min-width: 180px;
+}
+.welcome-banner {
+  background: #0b543f;
+  gap: 24px;
+}
+@media (max-width: 850px) {
+  .brand-logo--login {
+    width: 175px;
+  }
+  .login-brand {
+    padding: 8px 14px;
+  }
+}
+@media (max-width: 580px) {
+  .welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hero-logo {
+    max-width: 100%;
+    width: 180px;
+    padding: 10px 14px;
+    align-self: center;
+  }
+  .brand-logo--project {
+    width: 140px;
+  }
+  .brand-logo--form {
+    width: 190px;
+  }
+  .brand-logo--report {
+    width: 130px;
+  }
+}
+@media print {
+  .brand-logo {
+    break-inside: avoid;
+  }
+  .brand-logo--report {
+    width: 125px;
+  }
+  .report-brand-heading {
+    flex-wrap: nowrap;
+  }
+  .report-brand-heading > div {
+    min-width: 0;
+  }
+  .report-brand-heading .status-pill {
+    font-size: 8px;
+    white-space: normal;
+  }
+}
+.brand-logo--topbar {
+  display: none;
+}
+@media (max-width: 850px) {
+  .brand-logo--topbar {
+    display: inline-flex;
+    width: 72px;
+  }
+}
+@media (max-width: 580px) {
+  .topbar .breadcrumb {
+    display: none;
+  }
+}

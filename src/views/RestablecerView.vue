@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from "@/components/BrandLogo.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
@@ -36,10 +37,12 @@ async function save() {
 <template>
   <main class="login-panel" style="min-height: 100vh">
     <section class="login-card">
-      <div class="brand mb-8">
-        <span class="brand-symbol"><Icon name="Sprout" :size="28" /></span>La
-        Viandita
-      </div>
+      <RouterLink
+        to="/login"
+        class="form-brand"
+        aria-label="La Viandita: volver al ingreso"
+        ><BrandLogo variant="form"
+      /></RouterLink>
       <span class="eyebrow">RECUPERACIÓN DE CUENTA</span>
       <h1>Elegí una nueva contraseña</h1>
       <template v-if="auth.user && auth.usingSupabase"

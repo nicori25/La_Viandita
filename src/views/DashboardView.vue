@@ -1,4 +1,5 @@
 <script setup>
+import BrandLogo from "@/components/BrandLogo.vue";
 import { computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { puedeAcceder } from "@/utils/roles";
@@ -73,11 +74,7 @@ const shortcuts = computed(() =>
           >Conocé La Viandita <Icon name="ArrowUpRight" :size="16"
         /></RouterLink>
       </div>
-      <div class="hero-art" aria-hidden="true">
-        <div class="plate"><Icon name="Utensils" :size="68" /></div>
-        <span class="art-leaf leaf-one">✦</span
-        ><span class="art-leaf leaf-two">✦</span><span class="art-circle" />
-      </div>
+      <div class="hero-logo"><BrandLogo variant="hero" decorative /></div>
     </div>
     <PeriodFilter
       v-model:desde="desde"
